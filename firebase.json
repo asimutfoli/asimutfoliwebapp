@@ -4,6 +4,7 @@
   },
   "hosting": {
     "public": "public",
+    "site": "asimutfolilo",
     "ignore": [
       "firebase.json",
       "**/.*",
