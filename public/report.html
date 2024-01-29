@@ -189,7 +189,7 @@
                     <div class="copyright-text-wrap">
                         <p class="mb-0">
                             <span class="copyright-text">
-                                Copyright © 2022 <a href="index.html">Asimutfoli</a>. All rights reserved.
+                                Copyright © 2024 <a href="index.html">Asimutfoli</a>. All rights reserved.
                             </span>
                             Design: <a rel="sponsored" href="https://templatemo.com" target="_blank">TemplateMo</a>
                         </p>
@@ -210,9 +210,9 @@
 
     <script type="module">
         // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-analytics.js";
-        import { getPerformance } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-performance.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-analytics.js";
+        import { getPerformance } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-performance.js";
         // TODO: Add SDKs for Firebase products that you want to use
         // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -234,12 +234,15 @@
         const analytics = getAnalytics(app);
         const perf = getPerformance(app);
 
-        // import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+        // import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
         // const auth = getAuth();
-        import { getDatabase, ref, update } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+        import { getDatabase, ref, update } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
         const db = getDatabase();
 
-        const reportId = Date.now();
+        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-storage.js";
+        const storage = getStorage(app);
+
+        var reportId = Date.now();
 
         var captureReportDataButton = document.getElementById("reportbutton");
         captureReportDataButton.addEventListener("click", captureReportData);
@@ -252,7 +255,7 @@
             var missingDescriptionLastSeen = document.getElementById("missingdescriptionlastseen").value;
             var missingPlaceLastSeen = document.getElementById("missingplacelastseen").value;
             var missingDateTimeLastSeen = document.getElementById("missingdatetimelastseen").value;
-            var missingPicture = document.getElementById("missingpicture").value;
+            var missingPicture = document.getElementById("missingpicture");
 
             var reportingFirstName = document.getElementById("alertingfirstname").value;
             var reportingLastName = document.getElementById("alertinglastname").value;
@@ -263,32 +266,51 @@
             var reportingContactMobileNumber2 = document.getElementById("contactingmobilenumber2").value;
             var reportingContactMobileNumber3 = document.getElementById("contactingmobilenumber3").value;
 
-            var newReportRef = ref(db, "reports" + "/" + reportId);
-            update(newReportRef, {
-                id: reportId,
-                missing: {
-                    firstname: missingFirstName,
-                    lastname: missingFirstName,
-                    age: missingAge,
-                    areaoforigin: missingAreaOfOrigin,
-                    description: missingDescriptionLastSeen,
-                    lastknownsightinglocation: missingPlaceLastSeen,
-                    lastknownsightingtime: missingDateTimeLastSeen,
-                    image: missingPicture
-                },
-                reporting: {
-                    firstname: reportingFirstName,
-                    lastname: reportingLastName,
-                    emailaddress: reportingEmailAddress,
-                    mobilenumber: reportingMobileNumber
-                },
-                contact: {
-                    mobilenumber1: reportingContactMobileNumber1,
-                    mobilenumber2: reportingContactMobileNumber2,
-                    mobilenumber3: reportingContactMobileNumber3
-                }
-            });
-            setTimeout(proceedToReport, 3000);
+            var missingPictureFile = missingPicture.files[0];
+            var missingPictureFileURL = "";
+
+            // Create a reference to the Firebase Storage location:
+            var fileStorageRef = storageRef(storage, "missingpersons" + "/" + reportId);
+
+            uploadBytes(fileStorageRef, missingPictureFile)
+                .then((snapshot) => {
+                    console.log("Uploaded missing person image");
+                    return getDownloadURL(snapshot.ref); // Return the Promise for downloadURL
+                })
+                .then((downloadURL) => {
+                    missingPictureFileURL = downloadURL;
+                    console.log("URL to missing person image:", missingPictureFileURL);
+
+                    var newReportRef = ref(db, "reports" + "/" + reportId);
+                    update(newReportRef, {
+                        id: reportId,
+                        missing: {
+                            firstname: missingFirstName,
+                            lastname: missingLastName,
+                            age: missingAge,
+                            areaoforigin: missingAreaOfOrigin,
+                            description: missingDescriptionLastSeen,
+                            lastknownsightinglocation: missingPlaceLastSeen,
+                            lastknownsightingtime: missingDateTimeLastSeen,
+                            imageurl: missingPictureFileURL
+                        },
+                        reporting: {
+                            firstname: reportingFirstName,
+                            lastname: reportingLastName,
+                            emailaddress: reportingEmailAddress,
+                            mobilenumber: reportingMobileNumber
+                        },
+                        contact: {
+                            mobilenumber1: reportingContactMobileNumber1,
+                            mobilenumber2: reportingContactMobileNumber2,
+                            mobilenumber3: reportingContactMobileNumber3
+                        }
+                    });
+                    setTimeout(proceedToReport, 3000);
+                })
+                .catch((error) => {
+                    console.error("Error uploading or getting download URL:", error);
+                });
         };
 
         const readTermsOfServiceButton = document.getElementById("termsofservicebutton");
@@ -298,7 +320,7 @@
         };
 
         function proceedToReport() {
-            window.location.href = ("report-view.html?reportid=" + reportId);
+            window.location.href = ("poster.html?reportid=" + reportId);
         };
     </script>
 

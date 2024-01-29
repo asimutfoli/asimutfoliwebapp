@@ -7,7 +7,7 @@
     <meta name="description" content="">
     <meta name="author" content="Asimutfoli">
 
-    <title>Report | Asimutfoli</title>
+    <title>Poster | Asimutfoli</title>
 
     <!-- CSS FILES -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -31,8 +31,8 @@
 
                     <div class="col-lg-6 col-12 mt-5 mt-lg-0">
                         <div class="about-thumb">
-                            <div class="section-title-wrap d-flex justify-content-end align-items-center mb-4">
-                                <h2 class="text-white me-4 mb-0">We just had a few questions</h2>
+                            <div class="section-title-wrap d-flex justify-content-center align-items-center mb-4 bg-danger">
+                                <h2 class="text-white me-4 mb-0 text-uppercase">Missing</h2>
                             </div>
                             <form role="form" class="custom-form contact-form" id="reportform" name="reportform">
                                 <div class="row">
@@ -156,7 +156,7 @@
                                 </div>
                                 <div class="row">
                                     <div class="col-lg-3 col-12 ms-auto">
-                                        <button type="submit" class="form-control" name="sharebutton"
+                                        <button type="button" class="form-control share-button" name="sharebutton"
                                             id="sharebutton">Share</button>
                                     </div>
                                 </div>
@@ -175,7 +175,7 @@
                     <div class="copyright-text-wrap">
                         <p class="mb-0">
                             <span class="copyright-text">
-                                Copyright © 2022 <a href="index.html">Asimutfoli</a>. All rights reserved.
+                                Copyright © 2024 <a href="index.html">Asimutfoli</a>. All rights reserved.
                             </span>
                             Design: <a rel="sponsored" href="https://templatemo.com" target="_blank">TemplateMo</a>
                         </p>
@@ -220,9 +220,9 @@
 
     <script type="module">
         // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-analytics.js";
-        import { getPerformance } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-performance.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-analytics.js";
+        import { getPerformance } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-performance.js";
         // TODO: Add SDKs for Firebase products that you want to use
         // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -244,20 +244,21 @@
         const analytics = getAnalytics(app);
         const perf = getPerformance(app);
 
-        // import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+        // import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
         // const auth = getAuth();
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
         const db = getDatabase();
 
         const reportId = document.getElementById("reportid").value;
 
         readReportData();
         function readReportData() {
-            event.preventDefault();
-
+            console.log("running report data query")
             var missingReportRef = ref(db, "reports" + "/" + reportId + "/" + "missing");
+            console.log(reportId)
             onValue(missingReportRef, (snapshot) => {
                 if (snapshot.exists()) {
+                    console.log("running report data query for missing")
                     var missingFirstName = snapshot.child("firstname").val();
                     var missingLastName = snapshot.child("lastname").val();
                     var missingAge = snapshot.child("age").val();
@@ -265,7 +266,7 @@
                     var missingDescriptionLastSeen = snapshot.child("description").val();
                     var missingPlaceLastSeen = snapshot.child("lastknownsightinglocation").val();
                     var missingDateTimeLastSeen = snapshot.child("lastknownsightingtime").val();
-                    var missingPicture = snapshot.child("image").val();
+                    var missingPictureFileURL = snapshot.child("imageurl").val();
 
                     document.getElementById("missingfirstname").value = missingFirstName;
                     document.getElementById("missinglastname").value = missingLastName;
@@ -274,7 +275,9 @@
                     document.getElementById("missingdescriptionlastseen").value = missingDescriptionLastSeen;
                     document.getElementById("missingplacelastseen").value = missingPlaceLastSeen;
                     document.getElementById("missingdatetimelastseen").value = missingDateTimeLastSeen;
-                    document.getElementById("missingpicture").value = missingPicture;
+                    document.getElementById("missingpicture").src = missingPictureFileURL;
+
+                    document.title = "Report" + " " + reportId + " | " + "Asimutfoli" + " " + missingFirstName + " " + missingLastName;
                 }
             });
 
@@ -282,7 +285,7 @@
             onValue(reportingReportRef, (snapshot) => {
                 if (snapshot.exists()) {
                     var reportingFirstName = snapshot.child("firstname").val();
-                    var reportingFirstName = snapshot.child("lastname").val();
+                    var reportingLastName = snapshot.child("lastname").val();
                     var reportingEmailAddress = snapshot.child("emailaddress").val();
                     var reportingMobileNumber = snapshot.child("mobilenumber").val();
 
@@ -308,7 +311,25 @@
         };
 
         var shareReportDataButton = document.getElementById("sharebutton");
+        shareReportDataButton.addEventListener("click", shareReport);
 
+        function shareReport() {
+            if (navigator.share) {
+                var missingFirstName = document.getElementById("missingfirstname").value;
+                var missingLastName = document.getElementById("missinglastname").value;
+                navigator.share({
+                    url: window.location.href,
+                    title: document.title,
+                    text: "Asimutfoli" + " " + missingFirstName + " " + missingLastName + "," + " " + " please take a look."
+                })
+                    .then(() => console.log('Shared successfully!'))
+                    .catch((error) => console.error('Error sharing:', error));
+            } else {
+                console.error('Browser does not support the Web Share API');
+                // Optionally provide a fallback for unsupported browsers, such as:
+                // alert('Sharing is not supported in this browser.');
+            }
+        }
     </script>
 
 </body>
